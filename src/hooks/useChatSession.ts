@@ -13,7 +13,7 @@ import {
   getPendingPermissions, getPendingQuestions,
   getSessionChildren,
   executeCommand,
-  summarizeSession,
+  getBuiltinCommand,
   updateSession,
   type ApiSession,
   type ApiAgent, type Attachment, type ModelInfo,
@@ -416,32 +416,39 @@ export function useChatSession({ chatAreaRef, currentModel, refetchModels }: Use
     const args = spaceIndex > 0 ? withoutSlash.slice(spaceIndex + 1) : ''
     
     if (!command) return
-    
+
+    const builtin = getBuiltinCommand(command)
     let sessionId = routeSessionId
     
     try {
-      // Create session if needed (like handleSend does)
-      if (!sessionId) {
-        const newSession = await createSession()
-        sessionId = newSession.id
-        messageStore.setCurrentSession(sessionId)
-        navigateToSession(sessionId)
+      // Auto-create session if the command requires it, or if it's a non-builtin command
+      if (builtin?.requiresSession || !builtin) {
+        if (!sessionId) {
+          const newSession = await createSession()
+          sessionId = newSession.id
+          messageStore.setCurrentSession(sessionId)
+          navigateToSession(sessionId)
+        }
       }
       
-      if (command === 'compact') {
-        if (!currentModel) {
-          handleError('execute command', new Error('No model selected'))
-          return
-        }
-        await summarizeSession(sessionId, { providerID: currentModel.providerId, modelID: currentModel.id }, effectiveDirectory)
+      // Dispatch to built-in handler if matched
+      if (builtin) {
+        await builtin.execute({
+          sessionId,
+          currentModel,
+          effectiveDirectory,
+          navigateHome,
+          handleNewChat,
+        }, args)
         return
       }
       
-      await executeCommand(sessionId, command, args, effectiveDirectory)
+      // Non-builtin: forward to backend via generic command endpoint
+      await executeCommand(sessionId!, command, args, effectiveDirectory)
     } catch (err) {
       handleError('execute command', err)
     }
-  }, [routeSessionId, effectiveDirectory, createSession, navigateToSession, currentModel])
+  }, [routeSessionId, effectiveDirectory, createSession, navigateToSession, currentModel, navigateHome, handleNewChat])
 
   // Undo with animation
   const handleUndoWithAnimation = useCallback(async (userMessageId: string) => {

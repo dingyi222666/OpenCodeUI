@@ -363,8 +363,20 @@ function InputBoxComponent({
           e.preventDefault()
           slashMenuRef.current.moveDown()
           return
-        case 'Enter':
+        case 'Enter': {
+          // Enter = 直接执行命令
+          e.preventDefault()
+          const selected = slashMenuRef.current.getSelectedCommand()
+          if (selected) {
+            setSlashOpen(false)
+            onCommand?.(`/${selected.name}`)
+            setText('')
+            setAttachments([])
+          }
+          return
+        }
         case 'Tab':
+          // Tab = 补全命令到输入框（可继续输入参数）
           e.preventDefault()
           slashMenuRef.current.selectCurrent()
           return

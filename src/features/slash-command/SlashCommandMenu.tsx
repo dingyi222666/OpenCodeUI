@@ -5,7 +5,21 @@
 
 import { useState, useEffect, useLayoutEffect, useRef, useImperativeHandle, forwardRef } from 'react'
 import { getCommands, type Command } from '../../api/command'
-import { TerminalIcon } from '../../components/Icons'
+
+// ============================================
+// Sub-components
+// ============================================
+
+function Kbd({ children }: { children: React.ReactNode }) {
+  return (
+    <kbd className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 
+                    text-[11px] font-mono font-medium leading-none
+                    bg-bg-100 text-text-300 border border-border-200 rounded
+                    shadow-[0_1px_0_0_var(--border-200)]">
+      {children}
+    </kbd>
+  )
+}
 
 // ============================================
 // Types
@@ -158,7 +172,6 @@ export const SlashCommandMenu = forwardRef<SlashCommandMenuHandle, SlashCommandM
       >
         {/* Header */}
         <div className="px-3 py-2 border-b border-border-200 flex items-center gap-2 text-xs text-text-400">
-          <TerminalIcon size={14} />
           <span>Commands</span>
           {query && <span className="text-text-300">/ {query}</span>}
         </div>
@@ -181,7 +194,7 @@ export const SlashCommandMenu = forwardRef<SlashCommandMenuHandle, SlashCommandM
             <button
               key={cmd.name}
               title={cmd.description}
-              className={`w-full px-3 py-2.5 md:py-2 flex items-start gap-3 text-left transition-colors ${
+              className={`w-full px-3 py-2.5 md:py-2 flex items-center gap-3 text-left transition-colors ${
                 index === selectedIndex
                   ? 'bg-accent-main-100/10'
                   : 'hover:bg-bg-100 active:bg-bg-100'
@@ -192,13 +205,11 @@ export const SlashCommandMenu = forwardRef<SlashCommandMenuHandle, SlashCommandM
               <span className="text-accent-main-100 font-mono text-sm flex-shrink-0">
                 /{cmd.name}
               </span>
-              <div className="flex-1 min-w-0">
-                {cmd.description && (
-                  <div className="text-xs text-text-400 truncate">
-                    {cmd.description}
-                  </div>
-                )}
-              </div>
+              {cmd.description && (
+                <span className="flex-1 min-w-0 text-xs text-text-400 truncate">
+                  {cmd.description}
+                </span>
+              )}
               {cmd.keybind && (
                 <span className="text-xs text-text-500 font-mono flex-shrink-0">
                   {cmd.keybind}
@@ -209,10 +220,19 @@ export const SlashCommandMenu = forwardRef<SlashCommandMenuHandle, SlashCommandM
         </div>
 
         {/* Footer Hints - 只在桌面端显示 */}
-        <div className="hidden md:flex px-3 py-1.5 border-t border-border-200 text-xs text-text-500 gap-3">
-          <span>↑↓ select</span>
-          <span>↵ run</span>
-          <span>esc cancel</span>
+        <div className="hidden md:flex px-3 py-1.5 border-t border-border-200 text-[11px] text-text-400 items-center gap-4">
+          <span className="flex items-center gap-1">
+            <Kbd>↑</Kbd><Kbd>↓</Kbd> select
+          </span>
+          <span className="flex items-center gap-1">
+            <Kbd>Tab</Kbd> complete
+          </span>
+          <span className="flex items-center gap-1">
+            <Kbd>↵</Kbd> run
+          </span>
+          <span className="flex items-center gap-1">
+            <Kbd>Esc</Kbd> close
+          </span>
         </div>
       </div>
     )
